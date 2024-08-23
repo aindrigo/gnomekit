@@ -1,1 +1,3 @@
-println("no")
+function gdk.init()
+    
+end

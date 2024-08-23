@@ -110,12 +110,7 @@ function gdk.fs.includeDirectory(path, excludeFilter, recursive)
     end
 end
 
-println("Calling init.lua")
-GDK_INIT_CALLED = true
 gdk.fs.include(REALM_SHARED, "gnomekit/gdk/init.lua")
-
-println("Beginning include process of gdk folder")
-
 gdk.fs.includeDirectory("gnomekit/gdk/libs")
 gdk.fs.includeDirectory("gnomekit/gdk", function(path)
     local name = gdk.fs.fileNameFromPath(path)
