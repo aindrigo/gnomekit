@@ -1,0 +1,5 @@
+"gnomekit"
+{
+    "title"     "Gnome Development Kit"
+    "base"      "sandbox"
+}
