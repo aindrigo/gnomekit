@@ -8,8 +8,14 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ---------------------
-Wrapper for MySQLOO, designed to make development easier.
+Wrapper for MySQLOO, designed to make development easier and uses the async library.
 Requires middleclass and async library.
+
+Example:
+local query = mysql:select("players")
+query:where("steamid", ply:SteamID())
+local data = query:await() -- array of rows
+
 ]]--
 
 require("mysqloo")
@@ -18,8 +24,27 @@ mysql = mysql or {}
 mysql.queue = mysql.queue or {}
 mysql.connected = mysql.connected or  false
 
-mysql._queryClass = mysql._queryClass or middleclass("Query")
+mysql._queryClass = mysql._queryClass or middleclass("Query", async._funcClass)
 function mysql._queryClass:initialize(dbTable)
+    async._funcClass.initialize(self, function(success, error)
+        local queryStr = queryClass:build()
+        if queryStr == "" then 
+            table.remove(mysql.queue, i)
+            continue
+        end
+
+        local query = mysql.database:query(queryStr)
+        query:start()
+
+        function query:onSuccess(data)
+            success(data)
+        end
+
+        function query:onError(err)
+            error(err)
+        end
+    end)
+
     self.dbTable = dbTable
 end
 
@@ -58,7 +83,6 @@ mysql._selectClass = middleclass("SelectQuery", mysql._queryClass)
 function mysql._selectClass:initialize(dbTable)
     mysql._queryClass.initialize(self, dbTable)
     self._where = {}
-    self._callbacks = {}
     self._limit = "*"
 end
 
@@ -68,10 +92,6 @@ end
 
 function mysql._selectClass:limit(value)
     self._limit = tostring(value)
-end
-
-function mysql._selectClass:then(cb)
-    table.insert(self._callbacks, cb)
 end
 
 function mysql._selectClass:build()
@@ -89,20 +109,4 @@ end
 
 function mysql:select(dbTable)
     return mysql._selectClass:new(dbTable)
-end
-
---- Should be called once per tick
-function mysql:update()
-    for i, queryClass in ipairs(mysql.queue) do
-        local queryStr = queryClass:build()
-        if queryStr == "" then 
-            table.remove(mysql.queue, i)
-            continue
-        end
-
-        local query = mysql.database:query(queryStr)
-
-
-        table.remove(mysql.queue, i)
-    end
 end
