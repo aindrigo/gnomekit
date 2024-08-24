@@ -9,12 +9,27 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
 
 ---------------------
 Wrapper for MySQLOO, designed to make development easier.
+Requires middleclass and async library.
 ]]--
 
 require("mysqloo")
 
 mysql = mysql or {}
+mysql.queue = mysql.queue or {}
 mysql.connected = mysql.connected or  false
+
+mysql._queryClass = mysql._queryClass or middleclass("Query")
+function mysql._queryClass:initialize(dbTable)
+    self.dbTable = dbTable
+end
+
+function mysql._queryClass:build()
+    return ""
+end
+
+function mysql._queryClass:execute()
+    table.insert(mysql.queue, self)
+end
 
 function mysql:connect(host, port, username, password, database)
     return mysql:connectTable({
@@ -39,3 +54,55 @@ function mysql:connectTable(connectionData)
     mysql.database:connect()
 end
 
+mysql._selectClass = middleclass("SelectQuery", mysql._queryClass)
+function mysql._selectClass:initialize(dbTable)
+    mysql._queryClass.initialize(self, dbTable)
+    self._where = {}
+    self._callbacks = {}
+    self._limit = "*"
+end
+
+function mysql._selectClass:where(key, value)
+    self._where[key] = value
+end
+
+function mysql._selectClass:limit(value)
+    self._limit = tostring(value)
+end
+
+function mysql._selectClass:then(cb)
+    table.insert(self._callbacks, cb)
+end
+
+function mysql._selectClass:build()
+    local query = "SELECT " .. self._limit .. " FROM " .. self.dbTable
+    if #self._where > 0 then
+        local i = 1
+        for key, value in pairs(self._where) do
+            query = query .. tn(i == 1, " WHERE ", " AND ") .. key .. "=" .. tn(isnumber(value), value, mysql.database:escape(value))
+            i = i + 1
+        end
+    end
+
+    return query
+end
+
+function mysql:select(dbTable)
+    return mysql._selectClass:new(dbTable)
+end
+
+--- Should be called once per tick
+function mysql:update()
+    for i, queryClass in ipairs(mysql.queue) do
+        local queryStr = queryClass:build()
+        if queryStr == "" then 
+            table.remove(mysql.queue, i)
+            continue
+        end
+
+        local query = mysql.database:query(queryStr)
+
+
+        table.remove(mysql.queue, i)
+    end
+end

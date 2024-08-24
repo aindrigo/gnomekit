@@ -89,12 +89,12 @@ function gdk.fs.find(path, filter, recursive)
     local files, dirs = file.Find(path .. "/" .. filter, "LUA")
 
     
-    for _, name in pairs(dirs) do
+    for _, name in ipairs(dirs) do
         local fPath = gdk.fs.add(path, name)
         table.Add(result, gdk.fs.find(fPath, filter, true))
     end
 
-    for _, name in pairs(files) do
+    for _, name in ipairs(files) do
         local fPath = gdk.fs.add(path, name)
         table.insert(result, fPath)
     end
