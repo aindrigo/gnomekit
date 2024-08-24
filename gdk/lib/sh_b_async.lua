@@ -20,9 +20,9 @@ Small note: You cannot use timers and await as they depend on ticks and using aw
 
 async = async or {}
 async.queue = async.queue or {}
-async._funcClass = middleclass("AsyncFunction")
+async._futureClass = middleclass("AsyncFuture")
 
-function async._funcClass:initialize(func)
+function async._futureClass:initialize(func)
     self._func = func
     self._executeCalled = false
     self._thenFuncs = {}
@@ -37,7 +37,7 @@ function async._funcClass:initialize(func)
     setmetatable(self, mt)
 end
 
-function async._funcClass:_exec(...)
+function async._futureClass:_exec(...)
     if self._executeCalled then
         return error("Already called exec!")
     end
@@ -59,16 +59,16 @@ function async._funcClass:_exec(...)
     end
 end
 
-function async._funcClass:exec(...)
+function async._futureClass:exec(...)
     local thr = coroutine.create(self._exec)
     coroutine.resume(thr, self, ...)
 end
 
-function async._funcClass:callback(cb)
+function async._futureClass:callback(cb)
     table.insert(self._thenFuncs, cb)
 end
 
-function async._funcClass:_success(...)
+function async._futureClass:_success(...)
     self.returnValues = { ... }
     self._worked = true
     for _, cb in ipairs(self._thenFuncs) do
@@ -76,7 +76,7 @@ function async._funcClass:_success(...)
     end
 end
 
-function async._funcClass:_error(...)
+function async._futureClass:_error(...)
     self._errorCause = { ... }
     self._worked = false
     for _, cb in ipairs(self._errorFuncs) do
@@ -84,15 +84,15 @@ function async._funcClass:_error(...)
     end
 end
 
-function async._funcClass:error(cb)
+function async._futureClass:error(cb)
     table.insert(self._errorFuncs, cb)
 end
 
-function async._funcClass:queue()
+function async._futureClass:queue()
     table.insert(async.queue, self)
 end
 
-function async._funcClass:await(...)
+function async._futureClass:await(...)
     self:exec(...)
     local startTime = os.time()
     local timeoutTime = startTime + self.timeout
@@ -119,7 +119,7 @@ end
 
 local metatable = getmetatable(async) or {}
 function metatable:__call(cb)
-    return async._funcClass:new(cb)
+    return async._futureClass:new(cb)
 end
 
 setmetatable(async, metatable)

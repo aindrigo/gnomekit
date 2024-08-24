@@ -23,10 +23,10 @@ mysql = mysql or {}
 mysql.queue = mysql.queue or {}
 mysql.connected = mysql.connected or  false
 
-mysql._queryClass = middleclass("Query", async._funcClass)
+mysql._queryClass = middleclass("Query", async._futureClass)
 function mysql._queryClass:initialize(dbTable)
     local me = self
-    async._funcClass.initialize(self, function(success, error)
+    async._futureClass.initialize(self, function(success, error)
         local queryStr = me:build()
         if queryStr == "" then 
             table.remove(mysql.queue, i)
@@ -71,20 +71,20 @@ function mysql:connect(host, port, username, password, database)
     })
 end
 
-local green = Color(0, 255, 0)
-local red = Color(255, 0, 0)
 function mysql:connectTable(connectionData)
-    mysql.database = mysqloo.connect(connectionData.host, connectionData.username, connectionData.password, connectionData.database, connectionData.port)
+    return async(function(success, err)
+        mysql.database = mysqloo.connect(connectionData.host, connectionData.username, connectionData.password, connectionData.database, connectionData.port)
 
-    mysql.database.onConnected = function( db )
-        MsgC(green, "[MySQL] ", color_white, "Successfully connected to the database!\n")
-    end
+        mysql.database.onConnected = function( db )
+            success()
+        end
 
-    mysql.database.onConnectionFailed = function( db, err )
-        MsgC(red, "[MySQL] ", color_white, "Could not connect to the database!\n" .. err .. "\n")
-    end
+        mysql.database.onConnectionFailed = function( db, err )
+            err(err)
+        end
 
-    mysql.database:connect()
+        mysql.database:connect()
+    end)
 end
 
 mysql._selectClass = middleclass("SelectQuery", mysql._queryClass)
