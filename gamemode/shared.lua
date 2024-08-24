@@ -22,13 +22,13 @@ gdk.consoleColorWarn = Color(213, 198, 42)
 --- Prints something to the console
 -- @vararg Multiple values, space seperated then printed to the developer console
 function println(...)
-    MsgC(gdk.consoleColor, "[gdk] [info]", color_white, table.concat({ ... }, " "), "\n")
+    MsgC(gdk.consoleColor, "[gdk] [info] ", color_white, table.concat({ ... }, " "), "\n")
 end
 
 --- Prints a warning to the console
 -- @vararg Multiple values, space seperated then printed to the developer console
 function warnln(...)
-    MsgC(gdk.consoleColorWarn, "[gdk] [warn]", color_white, table.concat({ ... }, " "), "\n")
+    MsgC(gdk.consoleColorWarn, "[gdk] [warn] ", color_white, table.concat({ ... }, " "), "\n")
 end
 
 
@@ -133,5 +133,5 @@ gdk.fs.include(REALM_SHARED, "gnomekit/gdk/init.lua")
 gdk.fs.includeDirectory("gnomekit/gdk/lib")
 gdk.fs.includeDirectory("gnomekit/gdk", function(path)
     local name = gdk.fs.fileNameFromPath(path)
-    return name == "init.lua"
+    return name == "init.lua" or string.StartsWith(path, "gnomekit/gdk/modules")
 end, true)

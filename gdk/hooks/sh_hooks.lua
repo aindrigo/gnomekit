@@ -4,3 +4,7 @@ function GM:Initialize()
 
     gdk.init()
 end
+
+function GM:OnReloaded()
+    gdk.reload()
+end
