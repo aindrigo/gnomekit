@@ -17,12 +17,20 @@ function tn(condition, value, notValue)
 end
 
 gdk.consoleColor = Color(17, 185, 17)
+gdk.consoleColorWarn = Color(213, 198, 42)
 
 --- Prints something to the console
 -- @vararg Multiple values, space seperated then printed to the developer console
 function println(...)
-    MsgC(gdk.consoleColor, "[gdk] ", color_white, table.concat({ ... }, " "), "\n")
+    MsgC(gdk.consoleColor, "[gdk] [info]", color_white, table.concat({ ... }, " "), "\n")
 end
+
+--- Prints a warning to the console
+-- @vararg Multiple values, space seperated then printed to the developer console
+function warnln(...)
+    MsgC(gdk.consoleColorWarn, "[gdk] [warn]", color_white, table.concat({ ... }, " "), "\n")
+end
+
 
 gdk.fs = gdk.fs or {}
 
@@ -91,7 +99,11 @@ function gdk.fs.find(path, filter, recursive)
     
     for _, name in ipairs(dirs) do
         local fPath = gdk.fs.add(path, name)
-        table.Add(result, gdk.fs.find(fPath, filter, true))
+        if recursive then
+            table.Add(result, gdk.fs.find(fPath, filter, true))
+        else
+            table.insert(result, fPath)
+        end
     end
 
     for _, name in ipairs(files) do
