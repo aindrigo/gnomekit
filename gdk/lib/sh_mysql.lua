@@ -30,7 +30,7 @@ function mysql._queryClass:initialize(dbTable)
         local queryStr = queryClass:build()
         if queryStr == "" then 
             table.remove(mysql.queue, i)
-            continue
+            return
         end
 
         local query = mysql.database:query(queryStr)

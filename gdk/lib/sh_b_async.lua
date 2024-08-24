@@ -14,6 +14,8 @@ Small example:
 local fun = async(function(result)
     print(result)
 end)
+
+Small note: You cannot use timers and await as they depend on ticks and using await freezes all execution until the execution has finished.
 ]]--
 
 async = async or {}
@@ -25,6 +27,7 @@ function async._funcClass:initialize(func)
     self._executeCalled = false
     self._thenFuncs = {}
     self._errorFuncs = {}
+    self.timeout = 5
 end
 
 function async._funcClass:_exec(...)
@@ -33,14 +36,24 @@ function async._funcClass:_exec(...)
     end
 
     self._executeCalled = true
-    local success, res = pcall(self._func, self._success, self._error, ...)
+
+    local me = self
+    local va = ...
+    local success, res = pcall(function(f)
+        f(function(...)
+            me:_success(...)
+        end, function(...)
+            me:_error(...)
+        end, va)
+    end, self._func)
+
     if not success and not self._worked then
         self._worked = false
         self:_error(res)
     end
 end
 
-function async._funcClass:then(cb)
+function async._funcClass:callback(cb)
     table.insert(self._thenFuncs, cb)
 end
 
@@ -52,7 +65,7 @@ function async._funcClass:_success(...)
     end
 end
 
-function async._funcClass:_error(...)s
+function async._funcClass:_error(...)
     self._errorCause = { ... }
     self._worked = false
     for _, cb in ipairs(self._errorFuncs) do
@@ -70,15 +83,21 @@ end
 
 function async._funcClass:await(...)
     self:_exec(...)
+    local startTime = os.time()
+    local timeoutTime = startTime + self.timeout
     while self._worked == nil do
-        -- nothing
+        local ct = os.time()
+        if timeoutTime <= ct then
+            return "Function did not return in time"
+        end
     end
 
     return tn(self.returnValues, unpack(self.returnValues), self._errorCause)
 end
 
-metatable = getmetatable(async)
+metatable = getmetatable(async) or {}
 function metatable:__call(cb)
     return async._funcClass:new(cb)
 end
 
+setmetatable(async, metatable)
