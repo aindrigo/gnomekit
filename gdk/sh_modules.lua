@@ -12,9 +12,9 @@ function gdk.modules.loadAll(directory, filter)
             warnln("Module", fPath, "does not contain module-info.json or is invalid. Continuing")
             continue
         end
+
         local moduleInfo = util.JSONToTable(contents)
         
-
         local fName = gdk.fs.fileNameFromPath(fPath)
         moduleInfo.id = moduleInfo.id or fName
         moduleInfo.name = moduleInfo.name or fName
@@ -51,13 +51,20 @@ function gdk.modules.loadAll(directory, filter)
     -- iterate one last time to actually execute the code
     for i, mod in ipairs(gdk.modules.list) do
         local luaPath = gdk.fs.add(mod.info.path, "lua")
+        local libPath = gdk.fs.add(mod.info.path, "lib")
+
         _G["MODULE"] = mod
         gdk.fs.includeDirectory(luaPath, nil, true)
+        gdk.fs.includeDirectory(libPath, nil, true)
         local modData = _G["MODULE"] or {}
 
         gdk.modules.list[i] = _G["MODULE"]
         local mod = gdk.modules.list[i]
         _G["MODULE"] = nil
+
+        if isfunction(mod.Init) then
+            mod:Init()
+        end
 
         println("Loaded module", mod.info.name)
     end

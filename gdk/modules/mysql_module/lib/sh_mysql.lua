@@ -15,7 +15,6 @@ Example:
 local query = mysql:select("players")
 query:where("steamid", ply:SteamID())
 local data = query:await() -- array of rows
-
 ]]--
 
 require("mysqloo")
@@ -24,25 +23,31 @@ mysql = mysql or {}
 mysql.queue = mysql.queue or {}
 mysql.connected = mysql.connected or  false
 
-mysql._queryClass = mysql._queryClass or middleclass("Query", async._funcClass)
+mysql._queryClass = middleclass("Query", async._funcClass)
 function mysql._queryClass:initialize(dbTable)
+    local me = self
     async._funcClass.initialize(self, function(success, error)
-        local queryStr = queryClass:build()
+        local queryStr = me:build()
         if queryStr == "" then 
             table.remove(mysql.queue, i)
             return
         end
 
         local query = mysql.database:query(queryStr)
-        query:start()
-
-        function query:onSuccess(data)
+        query:setOption(mysqloo.OPTION_NAMED_FIELDS)
+        function query.onSuccess(q, data)
             success(data)
         end
 
-        function query:onError(err)
+        function query.onError(q, err)
             error(err)
         end
+
+        function query.onAborted(q)
+            error(query:error())
+        end
+
+        query:start()
     end)
 
     self.dbTable = dbTable
@@ -70,12 +75,15 @@ local green = Color(0, 255, 0)
 local red = Color(255, 0, 0)
 function mysql:connectTable(connectionData)
     mysql.database = mysqloo.connect(connectionData.host, connectionData.username, connectionData.password, connectionData.database, connectionData.port)
+
     mysql.database.onConnected = function( db )
         MsgC(green, "[MySQL] ", color_white, "Successfully connected to the database!\n")
     end
+
     mysql.database.onConnectionFailed = function( db, err )
         MsgC(red, "[MySQL] ", color_white, "Could not connect to the database!\n" .. err .. "\n")
     end
+
     mysql.database:connect()
 end
 

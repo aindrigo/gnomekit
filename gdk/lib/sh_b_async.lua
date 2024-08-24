@@ -34,7 +34,6 @@ function async._funcClass:_exec(...)
     if self._executeCalled then
         return error("Already called exec!")
     end
-
     self._executeCalled = true
 
     local me = self
@@ -43,6 +42,7 @@ function async._funcClass:_exec(...)
         f(function(...)
             me:_success(...)
         end, function(...)
+            print('guh')
             me:_error(...)
         end, va)
     end, self._func)
@@ -51,6 +51,10 @@ function async._funcClass:_exec(...)
         self._worked = false
         self:_error(res)
     end
+end
+
+function async._funcClass:exec(...)
+    coroutine.wrap(self._exec)(self, ...)
 end
 
 function async._funcClass:callback(cb)
@@ -82,7 +86,7 @@ function async._funcClass:queue()
 end
 
 function async._funcClass:await(...)
-    self:_exec(...)
+    self:exec(...)
     local startTime = os.time()
     local timeoutTime = startTime + self.timeout
     while self._worked == nil do
@@ -92,7 +96,14 @@ function async._funcClass:await(...)
         end
     end
 
-    return tn(self.returnValues, unpack(self.returnValues), self._errorCause)
+    if self.returnValues then
+        return unpack(self.returnValues)
+    end
+    return self._errorCause
+end
+
+function async.wait(seconds)
+    coroutine.wait(seconds)
 end
 
 metatable = getmetatable(async) or {}
