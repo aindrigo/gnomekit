@@ -28,6 +28,13 @@ function async._funcClass:initialize(func)
     self._thenFuncs = {}
     self._errorFuncs = {}
     self.timeout = 5
+
+    local mt = getmetatable(self)
+    function mt:__call(...)
+        self:exec(...)
+    end
+
+    setmetatable(self, mt)
 end
 
 function async._funcClass:_exec(...)
@@ -42,7 +49,6 @@ function async._funcClass:_exec(...)
         f(function(...)
             me:_success(...)
         end, function(...)
-            print('guh')
             me:_error(...)
         end, va)
     end, self._func)
@@ -54,7 +60,8 @@ function async._funcClass:_exec(...)
 end
 
 function async._funcClass:exec(...)
-    coroutine.wrap(self._exec)(self, ...)
+    local thr = coroutine.create(self._exec)
+    coroutine.resume(thr, self, ...)
 end
 
 function async._funcClass:callback(cb)
@@ -102,11 +109,15 @@ function async._funcClass:await(...)
     return self._errorCause
 end
 
-function async.wait(seconds)
-    coroutine.wait(seconds)
+function async.timer(seconds)
+    return async(function(success, err)
+        timer.Simple(seconds, function()
+            success()
+        end)
+    end)
 end
 
-metatable = getmetatable(async) or {}
+local metatable = getmetatable(async) or {}
 function metatable:__call(cb)
     return async._funcClass:new(cb)
 end

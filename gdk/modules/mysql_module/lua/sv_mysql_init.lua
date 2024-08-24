@@ -6,15 +6,3 @@ function MODULE:Init()
 
     mysql:connectTable(gdk.config.data.db)
 end
-
-local query = mysql:select("players")
-query:where("steamid", "penis")
-query:callback(function(data)
-    print("e")
-end)
-
-query:error(function(err)
-    print(err)
-end)
-
-query:exec()

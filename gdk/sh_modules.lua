@@ -54,8 +54,8 @@ function gdk.modules.loadAll(directory, filter)
         local libPath = gdk.fs.add(mod.info.path, "lib")
 
         _G["MODULE"] = mod
-        gdk.fs.includeDirectory(luaPath, nil, true)
         gdk.fs.includeDirectory(libPath, nil, true)
+        gdk.fs.includeDirectory(luaPath, nil, true)
         local modData = _G["MODULE"] or {}
 
         gdk.modules.list[i] = _G["MODULE"]
