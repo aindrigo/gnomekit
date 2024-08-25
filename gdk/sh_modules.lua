@@ -34,6 +34,12 @@ function gdk.modules.loadAll(directory, filter)
                     continue
                 end
 
+                local depmod = gdk.modules.list[depmodID]
+                if depmod.info.dependsOn and table.HasValue(depmod.info.dependsOn, mod.info.id) then
+                    warnln("Warning: Modules", mod.id, "and", depmodID, "depend on eachother. Continuing")
+                    continue
+                end
+
                 table.insert(deps, depmodID)
             end
 

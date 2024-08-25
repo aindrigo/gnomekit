@@ -79,8 +79,8 @@ function mysql:connectTable(connectionData)
             success()
         end
 
-        mysql.database.onConnectionFailed = function( db, err )
-            err(err)
+        mysql.database.onConnectionFailed = function( db, errMsg )
+            err(errMsg)
         end
 
         mysql.database:connect()
