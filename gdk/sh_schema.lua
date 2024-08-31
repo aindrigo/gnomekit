@@ -24,10 +24,17 @@ function gdk.schema.init()
 end
 
 function gdk.schema.reload()
+    local root = gdk.fs.add(gdk.schema.name, "gdk")
+
     SCHEMA = {}
-    gdk.fs.includeDirectory(gdk.fs.add(gdk.schema.name, "lib"))
-    gdk.fs.include(REALM_SHARED, gdk.fs.add(gdk.schema.name, "gdk", "init.lua"))
-    gdk.modules.loadAll(gdk.fs.add(gdk.schema.name, "gdk", "modules"))
+    gdk.fs.includeDirectory(gdk.fs.add(root, "lib"))
+    gdk.fs.include(REALM_SHARED, gdk.fs.add(root, "init.lua"))
+
+    local modDir = gdk.fs.add(root, "modules")
+
+    gdk.modules.loadAll(modDir)
+    
+    gdk.fs.includeDirectory(gdk.fs.add(root, "lua"), nil, true)
 
     local schemaTable = SCHEMA
     SCHEMA = nil
