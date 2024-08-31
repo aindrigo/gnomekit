@@ -129,8 +129,8 @@ function gdk.fs.includeDirectory(path, excludeFilter, recursive)
     end
 end
 
-gdk.fs.include(REALM_SHARED, "gnomekit/gdk/init.lua")
 gdk.fs.includeDirectory("gnomekit/gdk/lib")
+gdk.fs.include(REALM_SHARED, "gnomekit/gdk/init.lua")
 gdk.fs.includeDirectory("gnomekit/gdk", function(path)
     local name = gdk.fs.fileNameFromPath(path)
     return name == "init.lua" or string.StartsWith(path, "gnomekit/gdk/modules")

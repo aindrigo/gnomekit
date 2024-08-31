@@ -1,5 +1,0 @@
-{
-    "$schema": "file:///home/adam/gmod/dev_gdk/garrysmod/gamemodes/gnomekit/module_schema.json",
-    "name": "MySQL",
-    "dependsOn": []
-}
