@@ -15,14 +15,14 @@ local fun = async(function(result)
     print(result)
 end)
 
-Small note: You cannot use timers and await as they depend on ticks and using await freezes all execution until the execution has finished.
+Small note: You cannot use timers and await as they depend on ticks and using await freezes ALL Lua execution until the execution has finished.
 ]]--
 
 async = async or {}
 async.queue = async.queue or {}
-async._futureClass = middleclass("AsyncFuture")
+async._futureClass = class("AsyncFuture")
 
-function async._futureClass:initialize(func)
+function async._futureClass:constructor(func)
     self._func = func
     self._executeCalled = false
     self._thenFuncs = {}
@@ -119,7 +119,7 @@ end
 
 local metatable = getmetatable(async) or {}
 function metatable:__call(cb)
-    return async._futureClass:new(cb)
+    return async._futureClass(cb)
 end
 
 setmetatable(async, metatable)

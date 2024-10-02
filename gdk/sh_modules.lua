@@ -24,12 +24,12 @@ function gdk.modules.loadAll(directory, filter)
     end
 
     -- account for dependencies and move in list if dependencies are below
-    for i, mod in ipairs(gdk.modules.list) do
+    for i, mod in pairs(gdk.modules.list) do
         if istable(mod.info.DependsOn) and not mod._alreadySorted and #mod.info.DependsOn > 0 then
             local deps = {}
             for i, depID in ipairs(mod.info.DependsOn) do
                 local depmodID = gdk.modules.idName[depID]
-                if not depmodID then
+                if not depmodID or not gdk.modules.list[depmodID] then
                     warnln("Warning: Module", mod.ID, "depends on an invalid module", depID)
                     continue
                 end
@@ -51,14 +51,14 @@ function gdk.modules.loadAll(directory, filter)
 
             table.remove(gdk.modules.list, i)
             table.insert(gdk.modules.list, newID, mod)
+
         end
     end
 
     -- iterate one last time to actually execute the code
-    for i, mod in ipairs(gdk.modules.list) do
+    for i, mod in pairs(gdk.modules.list) do
         local luaPath = gdk.fs.add(mod.info.Path, "lua")
         local libPath = gdk.fs.add(mod.info.Path, "lib")
-
         _G["MODULE"] = mod
         gdk.fs.includeDirectory(libPath, nil, true)
         gdk.fs.includeDirectory(luaPath, nil, true)
